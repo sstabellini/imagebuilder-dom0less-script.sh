@@ -13,3 +13,5 @@ DOMU_KERNEL[1]="Image-domU"
 DOMU_RAMDISK[1]="domU-ramdisk.cpio"
 
 LOAD_CMD="tftpb"
+UBOOT_SOURCE="cmd.src"
+UBOOT_SCRIPT="cmd.uboot"

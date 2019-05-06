@@ -15,7 +15,7 @@ function load_file()
 {
     local filename=$1
 
-    echo "$LOAD_CMD $memaddr $filename"
+    echo "$LOAD_CMD $memaddr $filename" > $UBOOT_SOURCE
     add_size $filename
 }
 
@@ -85,4 +85,11 @@ then
     exit 1
 fi
 
-echo "bootm $xen_addr $dom0_ramdisk_addr $device_tree_addr"
+echo "bootm $xen_addr $dom0_ramdisk_addr $device_tree_addr" > $UBOOT_SOURCE
+
+memaddr=$(( $memaddr + $offset ))
+memaddr=`printf "0x%X\n" $memaddr`
+uboot_addr="$memaddr"
+mkimage -A arm64 -T script -C none -a $uboot_addr -e $uboot_addr -d $UBOOT_SOURCE "$UBOOT_SCRIPT" &> /dev/null
+echo "Generated uboot script $UBOOT_SCRIPT, to be loaded at address $uboot_addr:"
+echo "setenv bootcmd $LOAD_CMD $uboot_addr $UBOOT_SCRIPT; source $uboot_addr"
