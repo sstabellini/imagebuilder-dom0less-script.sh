@@ -1,0 +1,15 @@
+MEMORY_START="0x0"
+MEMORY_END="0x80000000"
+
+DEVICE_TREE="board.dtb"
+XEN="xen"
+DOM0_KERNEL="Image-dom0"
+DOM0_RAMDISK="dom0-ramdisk.cpio"
+
+NUM_DOMUS=2
+DOMU_KERNEL[0]="Image-domU"
+DOMU_RAMDISK[0]="domU-ramdisk.cpio"
+DOMU_KERNEL[1]="Image-domU"
+DOMU_RAMDISK[1]="domU-ramdisk.cpio"
+
+LOAD_CMD="tftpb"
