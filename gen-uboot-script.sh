@@ -15,7 +15,7 @@ function load_file()
 {
     local filename=$1
 
-    echo "$LOAD_CMD $memaddr $filename" > $UBOOT_SOURCE
+    echo "$LOAD_CMD $memaddr $filename" >> $UBOOT_SOURCE
     add_size $filename
 }
 
@@ -48,6 +48,7 @@ function check_compressed_file_type()
 
 . config
 
+rm -f $UBOOT_SOURCE $UBOOT_SCRIPT
 memaddr=$(( $MEMORY_START + $offset ))
 memaddr=`printf "0x%X\n" $memaddr`
 
@@ -85,7 +86,7 @@ then
     exit 1
 fi
 
-echo "bootm $xen_addr $dom0_ramdisk_addr $device_tree_addr" > $UBOOT_SOURCE
+echo "bootm $xen_addr $dom0_ramdisk_addr $device_tree_addr" >> $UBOOT_SOURCE
 
 memaddr=$(( $memaddr + $offset ))
 memaddr=`printf "0x%X\n" $memaddr`
