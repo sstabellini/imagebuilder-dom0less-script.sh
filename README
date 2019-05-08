@@ -1,0 +1,23 @@
+# TFTP BOOT WITH QEMU
+
+- Set LOAD_CMD="tftpb" in config file
+- Run gen-uboot-script.sh
+- Copy all the binaries and generated scripts to /tmp
+- Starts QEMU's container with -v /tmp:/tmp
+- At the U-Boot prompt:
+  - setenv serverip 192.168.76.2
+  - copy/paste the uboot commands printed by gen-uboot-script.sh, for instance:
+    tftpb 0x7AE00000 cmd.uboot; source 0x7AE00000
+
+
+# SCSI BOOT WITH QEMU
+- Set LOAD_CMD="load scsi 0:1" in config file
+- Run gen-uboot-script.sh
+- Copy all the binaries and generated scripts to the root of the first
+  partition of the disk image to be used, for instance /tmp/disk-image.img
+- Copy disk image to /tmp
+- Starts QEMU's container with -v /tmp:/tmp and /app/qemu-run.sh /tmp/disk-image.ing
+- At the U-Boot prompt:
+  - scsi scan
+  - copy/paste the uboot commands printed by gen-uboot-script.sh, for instance:
+    load scsi 0:1 0x7AE00000 cmd.uboot; source 0x7AE00000

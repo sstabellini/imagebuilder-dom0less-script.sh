@@ -93,4 +93,4 @@ memaddr=`printf "0x%X\n" $memaddr`
 uboot_addr="$memaddr"
 mkimage -A arm64 -T script -C none -a $uboot_addr -e $uboot_addr -d $UBOOT_SOURCE "$UBOOT_SCRIPT" &> /dev/null
 echo "Generated uboot script $UBOOT_SCRIPT, to be loaded at address $uboot_addr:"
-echo "setenv bootcmd $LOAD_CMD $uboot_addr $UBOOT_SCRIPT; source $uboot_addr"
+echo "$LOAD_CMD $uboot_addr $UBOOT_SCRIPT; source $uboot_addr"
