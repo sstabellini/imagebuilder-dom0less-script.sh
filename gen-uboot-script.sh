@@ -28,17 +28,14 @@ function add_device_tree_ramdisk()
 function add_device_tree()
 {
     local i=0
-    local size=0
     local filename=$1
-    local kernel_size=$(( $dom0_ramdisk_addr - $dom0_kernel_addr ))
-    kernel_size=`printf "0x%X\n" $kernel_size`
 
     echo "        #address-cells = <0x2>;" >> $temp
 	echo "        #size-cells = <0x2>;" >> $temp
-    echo "        xen,xen-bootargs = \"console=dtuart dtuart=serial0 dom0_mem=1G bootscrub=0 serrors=forward vwfi=native sched=null\";" >> $temp
+    echo "        xen,xen-bootargs = \"console=dtuart dtuart=serial0 dom0_mem=700M dom0_max_vcpus=1 bootscrub=0 serrors=forward vwfi=native sched=null\";" >> $temp
     echo "        dom0 {" >> $temp
 	echo "           compatible = \"xen,linux-zimage\", \"xen,multiboot-module\";" >> $temp
-	echo "           reg = <0x0 "$dom0_kernel_addr" 0x0 "$kernel_size">;" >> $temp
+	echo "           reg = <0x0 "$dom0_kernel_addr" 0x0 "$dom0_kernel_size">;" >> $temp
     echo "           bootargs = \"console=hvc0 earlycon=xen earlyprintk=xen\";" >> $temp
     echo "        };" >> $temp
 
@@ -51,10 +48,11 @@ function add_device_tree()
 		echo "            memory = <0x0 0x20000>;" >> $temp
 		echo "            cpus = <0x1>;" >> $temp
 		echo "            vpl011;" >> $temp
-        size=`stat --printf="%s" ${DOMU_KERNEL[$i]}`
-        add_device_tree_kernel ${domU_kernel_addr[$i]} $size
-        size=`stat --printf="%s" ${DOMU_RAMDISK[$i]}`
-        add_device_tree_ramdisk ${domU_ramdisk_addr[$i]} $size
+        add_device_tree_kernel ${domU_kernel_addr[$i]} ${domU_kernel_size[$i]}
+        if test "${domU_ramdisk_addr[$i]}"
+        then
+            add_device_tree_ramdisk ${domU_ramdisk_addr[$i]} ${domU_ramdisk_size[$i]}
+        fi
         echo "        };" >> $temp
         i=$(( $i + 1 ))
     done
@@ -110,7 +108,7 @@ function filter_device_tree()
     done < $filename_dts
 
     mv -f $filename_dtb "$filename_dtb".bak
-    dtc -I dts -I dtb $temp > $filename_dtb 2>/dev/null
+    dtc -I dts -O dtb $temp > $filename_dtb 2>/dev/null
     mv $temp $filename_dts
 }
 
@@ -172,6 +170,7 @@ load_file "$XEN".uboot
 check_compressed_file_type $DOM0_KERNEL "MS-DOS executable"
 dom0_kernel_addr=$memaddr
 load_file $DOM0_KERNEL
+dom0_kernel_size=$(( $memaddr - $dom0_kernel_addr ))
 
 check_compressed_file_type $DOM0_RAMDISK "cpio archive"
 dom0_ramdisk_addr=$memaddr
@@ -182,11 +181,16 @@ i=0
 while test $i -lt $NUM_DOMUS
 do
     check_compressed_file_type ${DOMU_KERNEL[$i]} "MS-DOS executable"
-    load_file ${DOMU_KERNEL[$i]}
     domU_kernel_addr[$i]=$memaddr
-    check_compressed_file_type ${DOMU_RAMDISK[$i]} "cpio archive"
-    load_file ${DOMU_RAMDISK[$i]}
-    domU_ramdisk_addr[$i]=$memaddr
+    load_file ${DOMU_KERNEL[$i]}
+    domU_kernel_size[$i]=$(( $memaddr - ${domU_kernel_addr[$i]} ))
+    if test "${DOMU_RAMDISK[$i]}"
+    then
+        check_compressed_file_type ${DOMU_RAMDISK[$i]} "cpio archive"
+        domU_ramdisk_addr[$i]=$memaddr
+        load_file ${DOMU_RAMDISK[$i]}
+        domU_ramdisk_size[$i]=$(( $memaddr - ${domU_ramdisk_addr[$i]} ))
+    fi
     i=$(( $i + 1 ))
 done
 
