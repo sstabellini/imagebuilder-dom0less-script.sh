@@ -25,6 +25,17 @@ function add_device_tree_ramdisk()
     echo "            };" >> $temp
 }
 
+function add_device_tree_passthrough()
+{
+    local addr=$1
+    local size=$2
+
+    echo "            module@$addr {" >> $temp
+    echo "                compatible = \"multiboot,device-tree\", \"multiboot,module\";" >> $temp
+	echo "                reg = <0x0 "$addr" 0x0 "$size">;" >> $temp
+    echo "            };" >> $temp
+}
+
 function add_device_tree()
 {
     local i=0
@@ -52,6 +63,10 @@ function add_device_tree()
         if test "${domU_ramdisk_addr[$i]}"
         then
             add_device_tree_ramdisk ${domU_ramdisk_addr[$i]} ${domU_ramdisk_size[$i]}
+        fi
+        if test "${domU_passthrough_dtb_addr[$i]}"
+        then
+            add_device_tree_passthrough ${domU_passthrough_dtb_addr[$i]} ${domU_passthrough_dtb_size[$i]}
         fi
         echo "        };" >> $temp
         i=$(( $i + 1 ))
@@ -195,6 +210,13 @@ do
         domU_ramdisk_addr[$i]=$memaddr
         load_file ${DOMU_RAMDISK[$i]}
         domU_ramdisk_size[$i]=$(( $memaddr - ${domU_ramdisk_addr[$i]} ))
+    fi
+    if test "${DOMU_PASSTHROUGH_DTB[$i]}"
+    then
+        check_compressed_file_type ${DOMU_PASSTHROUGH_DTB[$i]} "Device Tree Blob"
+        domU_passthrough_dtb_addr[$i]=$memaddr
+        load_file ${DOMU_PASSTHROUGH_DTB[$i]}
+        domU_passthrough_dtb_size[$i]=$(( $memaddr - ${domU_passthrough_dtb_addr[$i]} ))
     fi
     i=$(( $i + 1 ))
 done

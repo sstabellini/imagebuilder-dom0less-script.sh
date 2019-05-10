@@ -9,6 +9,7 @@ DOM0_RAMDISK="dom0-ramdisk.cpio"
 NUM_DOMUS=2
 DOMU_KERNEL[0]="Image-domU"
 DOMU_RAMDISK[0]="domU-ramdisk.cpio"
+DOMU_PASSTHROUGH_DTB[0]="passthrough-example-part.dtb"
 DOMU_KERNEL[1]="Image-domU"
 DOMU_RAMDISK[1]="domU-ramdisk.cpio"
 
