@@ -172,10 +172,15 @@ dom0_kernel_addr=$memaddr
 load_file $DOM0_KERNEL
 dom0_kernel_size=$(( $memaddr - $dom0_kernel_addr ))
 
-check_compressed_file_type $DOM0_RAMDISK "cpio archive"
-dom0_ramdisk_addr=$memaddr
-mkimage -A arm64 -T ramdisk -C gzip -a $dom0_ramdisk_addr -e $dom0_ramdisk_addr -d $DOM0_RAMDISK "$DOM0_RAMDISK".uboot &> /dev/null
-load_file "$DOM0_RAMDISK".uboot
+if test "$DOM0_RAMDISK"
+then
+    check_compressed_file_type $DOM0_RAMDISK "cpio archive"
+    dom0_ramdisk_addr=$memaddr
+    mkimage -A arm64 -T ramdisk -C gzip -a $dom0_ramdisk_addr -e $dom0_ramdisk_addr -d $DOM0_RAMDISK "$DOM0_RAMDISK".uboot &> /dev/null
+    load_file "$DOM0_RAMDISK".uboot
+else
+    dom0_ramdisk_addr="-"
+fi
 
 i=0
 while test $i -lt $NUM_DOMUS
