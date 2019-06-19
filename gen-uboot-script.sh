@@ -1,6 +1,7 @@
 #!/bin/bash
 
 offset=$((2*1024*1024))
+filesize=0
 
 function add_device_tree_kernel()
 {
@@ -57,7 +58,7 @@ function device_tree_editing()
         echo "fdt set /chosen/domU$i compatible \"xen,domain\"" >> $UBOOT_SOURCE
         echo "fdt set /chosen/domU$i \#address-cells <0x2>" >> $UBOOT_SOURCE
         echo "fdt set /chosen/domU$i \#size-cells <0x2>" >> $UBOOT_SOURCE
-        echo "fdt set /chosen/domU$i memory <0x0 0x20000>" >> $UBOOT_SOURCE
+        echo "fdt set /chosen/domU$i memory <0x0 0x40000>" >> $UBOOT_SOURCE
         echo "fdt set /chosen/domU$i cpus <0x1>" >> $UBOOT_SOURCE
         echo "fdt set /chosen/domU$i vpl011 <0x1>" >> $UBOOT_SOURCE
         add_device_tree_kernel "/chosen/domU$i" ${domU_kernel_addr[$i]} ${domU_kernel_size[$i]}
@@ -80,6 +81,7 @@ function add_size()
     memaddr=$(( $memaddr + $size + $offset - 1))
     memaddr=$(( $memaddr & ~($offset - 1) ))
     memaddr=`printf "0x%X\n" $memaddr`
+    filesize=$size
 }
 
 function load_file()
@@ -149,20 +151,20 @@ do
     check_compressed_file_type ${DOMU_KERNEL[$i]} "MS-DOS executable"
     domU_kernel_addr[$i]=$memaddr
     load_file ${DOMU_KERNEL[$i]}
-    domU_kernel_size[$i]=$(( $memaddr - ${domU_kernel_addr[$i]} ))
+    domU_kernel_size[$i]=$filesize
     if test "${DOMU_RAMDISK[$i]}"
     then
         check_compressed_file_type ${DOMU_RAMDISK[$i]} "cpio archive"
         domU_ramdisk_addr[$i]=$memaddr
         load_file ${DOMU_RAMDISK[$i]}
-        domU_ramdisk_size[$i]=$(( $memaddr - ${domU_ramdisk_addr[$i]} ))
+        domU_ramdisk_size[$i]=$filesize
     fi
     if test "${DOMU_PASSTHROUGH_DTB[$i]}"
     then
         check_compressed_file_type ${DOMU_PASSTHROUGH_DTB[$i]} "Device Tree Blob"
         domU_passthrough_dtb_addr[$i]=$memaddr
         load_file ${DOMU_PASSTHROUGH_DTB[$i]}
-        domU_passthrough_dtb_size[$i]=$(( $memaddr - ${domU_passthrough_dtb_addr[$i]} ))
+        domU_passthrough_dtb_size[$i]=$filesize
     fi
     i=$(( $i + 1 ))
 done
