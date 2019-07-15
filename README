@@ -1,6 +1,6 @@
 # TFTP BOOT WITH QEMU
 
-- Set LOAD_CMD="tftpb" in config file
+- export LOAD_CMD="tftpb"
 - Run gen-uboot-script.sh
 - Copy all the binaries and generated scripts to /tmp
 - Starts QEMU's container with -v /tmp:/tmp
@@ -11,7 +11,7 @@
 
 
 # SCSI BOOT WITH QEMU
-- Set LOAD_CMD="load scsi 0:1" in config file
+- export LOAD_CMD="load scsi 0:1"
 - Run gen-uboot-script.sh
 - Copy all the binaries and generated scripts to the root of the first
   partition of the disk image to be used, for instance /tmp/disk-image.img

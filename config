@@ -13,6 +13,5 @@ DOMU_PASSTHROUGH_DTB[0]="passthrough-example-part.dtb"
 DOMU_KERNEL[1]="Image-domU"
 DOMU_RAMDISK[1]="domU-ramdisk.cpio"
 
-LOAD_CMD="tftpb"
 UBOOT_SOURCE="boot.source"
 UBOOT_SCRIPT="boot.scr"
