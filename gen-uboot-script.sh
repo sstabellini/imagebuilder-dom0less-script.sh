@@ -42,14 +42,20 @@ function device_tree_editing()
     local device_tree_addr=$1
 
     echo "fdt addr $device_tree_addr" >> $UBOOT_SOURCE
-    echo "fdt resize" >> $UBOOT_SOURCE
+    echo "fdt resize 1024" >> $UBOOT_SOURCE
     echo "fdt set /chosen \#address-cells <0x2>" >> $UBOOT_SOURCE
     echo "fdt set /chosen \#size-cells <0x2>" >> $UBOOT_SOURCE
     echo "fdt set /chosen xen,xen-bootargs \"console=dtuart dtuart=serial0 dom0_mem=700M dom0_max_vcpus=1 bootscrub=0 serrors=forward vwfi=native sched=null\"" >> $UBOOT_SOURCE
     echo "fdt mknod /chosen dom0" >> $UBOOT_SOURCE
     echo "fdt set /chosen/dom0 compatible \"xen,linux-zimage\" \"xen,multiboot-module\"" >> $UBOOT_SOURCE
     echo "fdt set /chosen/dom0 reg <0x0 "$dom0_kernel_addr" 0x0 "$dom0_kernel_size">" >> $UBOOT_SOURCE
-    echo "fdt set /chosen/dom0 bootargs \"console=hvc0 earlycon=xen earlyprintk=xen\"" >> $UBOOT_SOURCE
+    echo "fdt set /chosen/dom0 bootargs \"console=hvc0 earlycon=xen earlyprintk=xen root=/dev/ram0\"" >> $UBOOT_SOURCE
+    if test $dom0_ramdisk_addr != "-"
+    then
+        echo "fdt mknod /chosen dom0-ramdisk" >> $UBOOT_SOURCE
+        echo "fdt set /chosen/dom0-ramdisk compatible \"xen,linux-initrd\" \"xen,multiboot-module\"" >> $UBOOT_SOURCE
+        echo "fdt set /chosen/dom0-ramdisk reg <0x0 "$dom0_ramdisk_addr" 0x0 "$dom0_ramdisk_size">" >> $UBOOT_SOURCE
+    fi
 
     i=0
     while test $i -lt $NUM_DOMUS
@@ -133,14 +139,14 @@ load_file "$XEN".uboot
 check_compressed_file_type $DOM0_KERNEL "MS-DOS executable"
 dom0_kernel_addr=$memaddr
 load_file $DOM0_KERNEL
-dom0_kernel_size=$(( $memaddr - $dom0_kernel_addr ))
+dom0_kernel_size=$filesize
 
 if test "$DOM0_RAMDISK"
 then
     check_compressed_file_type $DOM0_RAMDISK "cpio archive"
     dom0_ramdisk_addr=$memaddr
-    mkimage -A arm64 -T ramdisk -C gzip -a $dom0_ramdisk_addr -e $dom0_ramdisk_addr -d $DOM0_RAMDISK "$DOM0_RAMDISK".uboot &> /dev/null
-    load_file "$DOM0_RAMDISK".uboot
+    load_file "$DOM0_RAMDISK"
+    dom0_ramdisk_size=$filesize
 else
     dom0_ramdisk_addr="-"
 fi
@@ -181,7 +187,7 @@ then
     exit 1
 fi
 
-echo "bootm $xen_addr $dom0_ramdisk_addr $device_tree_addr" >> $UBOOT_SOURCE
+echo "bootm $xen_addr - $device_tree_addr" >> $UBOOT_SOURCE
 
 memaddr=$(( $memaddr + $offset + $offset ))
 memaddr=`printf "0x%X\n" $memaddr`
