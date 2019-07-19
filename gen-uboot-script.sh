@@ -133,8 +133,7 @@ memaddr=`printf "0x%X\n" $memaddr`
 
 check_compressed_file_type $XEN "MS-DOS executable"
 xen_addr=$memaddr
-mkimage -A arm64 -T kernel -C none -a $xen_addr -e $xen_addr -d $XEN "$XEN".uboot &> /dev/null
-load_file "$XEN".uboot
+load_file "$XEN"
 
 check_compressed_file_type $DOM0_KERNEL "MS-DOS executable"
 dom0_kernel_addr=$memaddr
@@ -187,7 +186,7 @@ then
     exit 1
 fi
 
-echo "bootm $xen_addr - $device_tree_addr" >> $UBOOT_SOURCE
+echo "booti $xen_addr - $device_tree_addr" >> $UBOOT_SOURCE
 
 memaddr=$(( $memaddr + $offset + $offset ))
 memaddr=`printf "0x%X\n" $memaddr`
