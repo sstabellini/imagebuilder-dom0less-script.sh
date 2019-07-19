@@ -130,6 +130,10 @@ function check_compressed_file_type()
 rm -f $UBOOT_SOURCE $UBOOT_SCRIPT
 memaddr=$(( $MEMORY_START + $offset ))
 memaddr=`printf "0x%X\n" $memaddr`
+uboot_addr=$memaddr
+# 2MB are enough for a uboot script
+memaddr=$(( $memaddr + $offset ))
+memaddr=`printf "0x%X\n" $memaddr`
 
 check_compressed_file_type $XEN "MS-DOS executable"
 xen_addr=$memaddr
@@ -179,18 +183,17 @@ device_tree_addr=$memaddr
 load_file $DEVICE_TREE
 device_tree_editing $device_tree_addr
 
-memaddr=$(( $MEMORY_END - $memaddr ))
+# disable device tree reloation
+echo "setenv fdt_high 0xffffffffffffffff" >> $UBOOT_SOURCE
+echo "booti $xen_addr - $device_tree_addr" >> $UBOOT_SOURCE
+mkimage -A arm64 -T script -C none -a $uboot_addr -e $uboot_addr -d $UBOOT_SOURCE "$UBOOT_SCRIPT" &> /dev/null
+
+memaddr=$(( $MEMORY_END - $memaddr - $offset ))
 if test $memaddr -lt 0
 then
     echo Error, not enough memory to load all binaries
     exit 1
 fi
 
-echo "booti $xen_addr - $device_tree_addr" >> $UBOOT_SOURCE
-
-memaddr=$(( $memaddr + $offset + $offset ))
-memaddr=`printf "0x%X\n" $memaddr`
-uboot_addr="$memaddr"
-mkimage -A arm64 -T script -C none -a $uboot_addr -e $uboot_addr -d $UBOOT_SOURCE "$UBOOT_SCRIPT" &> /dev/null
 echo "Generated uboot script $UBOOT_SCRIPT, to be loaded at address $uboot_addr:"
 echo "$LOAD_CMD $uboot_addr $UBOOT_SCRIPT; source $uboot_addr"
