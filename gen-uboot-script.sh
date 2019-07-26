@@ -49,12 +49,17 @@ function device_tree_editing()
     echo "fdt mknod /chosen dom0" >> $UBOOT_SOURCE
     echo "fdt set /chosen/dom0 compatible \"xen,linux-zimage\" \"xen,multiboot-module\"" >> $UBOOT_SOURCE
     echo "fdt set /chosen/dom0 reg <0x0 "$dom0_kernel_addr" 0x0 "$dom0_kernel_size">" >> $UBOOT_SOURCE
-    echo "fdt set /chosen/dom0 bootargs \"console=hvc0 earlycon=xen earlyprintk=xen root=/dev/ram0\"" >> $UBOOT_SOURCE
-    if test $dom0_ramdisk_addr != "-"
+    if test "$LOAD_CMD" = "tftpb"
     then
-        echo "fdt mknod /chosen dom0-ramdisk" >> $UBOOT_SOURCE
-        echo "fdt set /chosen/dom0-ramdisk compatible \"xen,linux-initrd\" \"xen,multiboot-module\"" >> $UBOOT_SOURCE
-        echo "fdt set /chosen/dom0-ramdisk reg <0x0 "$dom0_ramdisk_addr" 0x0 "$dom0_ramdisk_size">" >> $UBOOT_SOURCE
+        echo "fdt set /chosen/dom0 bootargs \"console=hvc0 earlycon=xen earlyprintk=xen root=/dev/ram0\"" >> $UBOOT_SOURCE
+        if test $dom0_ramdisk_addr != "-"
+        then
+            echo "fdt mknod /chosen dom0-ramdisk" >> $UBOOT_SOURCE
+            echo "fdt set /chosen/dom0-ramdisk compatible \"xen,linux-initrd\" \"xen,multiboot-module\"" >> $UBOOT_SOURCE
+            echo "fdt set /chosen/dom0-ramdisk reg <0x0 "$dom0_ramdisk_addr" 0x0 "$dom0_ramdisk_size">" >> $UBOOT_SOURCE
+        fi
+    else
+        echo "fdt set /chosen/dom0 bootargs \"console=hvc0 earlycon=xen earlyprintk=xen root=/dev/mmcblk0p2\"" >> $UBOOT_SOURCE
     fi
 
     i=0
@@ -144,7 +149,7 @@ dom0_kernel_addr=$memaddr
 load_file $DOM0_KERNEL
 dom0_kernel_size=$filesize
 
-if test "$DOM0_RAMDISK"
+if test "$DOM0_RAMDISK" && [[ $LOAD_CMD = "tftpb" ]]
 then
     check_compressed_file_type $DOM0_RAMDISK "cpio archive"
     dom0_ramdisk_addr=$memaddr
