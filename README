@@ -1,22 +1,22 @@
-# TFTP BOOT WITH QEMU
+# TFTP BOOT
 
 - export LOAD_CMD="tftpb"
 - Run gen-uboot-script.sh
 - Copy all the binaries and generated scripts to /tmp
-- Starts QEMU's container with -v /tmp:/tmp
+- Starts QEMU or boot the target
 - At the U-Boot prompt:
   - setenv serverip 192.168.76.2
   - copy/paste the uboot commands printed by gen-uboot-script.sh, for instance:
     tftpb 0x7AE00000 cmd.uboot; source 0x7AE00000
 
 
-# SCSI BOOT WITH QEMU
+# SCSI BOOT
 - export LOAD_CMD="load scsi 0:1"
 - Run gen-uboot-script.sh
 - Copy all the binaries and generated scripts to the root of the first
   partition of the disk image to be used, for instance /tmp/disk-image.img
 - Copy disk image to /tmp
-- Starts QEMU's container with -v /tmp:/tmp and /app/qemu-run.sh /tmp/disk-image.ing
+- Boot the target or starts QEMU enabling SD Card support, pointing to the disk image
 - At the U-Boot prompt:
   - scsi scan
   - copy/paste the uboot commands printed by gen-uboot-script.sh, for instance:
